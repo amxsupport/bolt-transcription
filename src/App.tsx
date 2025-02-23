@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { VideoPlayer } from './components/VideoPlayer';
 import { TranscriptionDisplay } from './components/TranscriptionDisplay';
 import { extractYouTubeId } from './utils/youtube';
+import { downloadAndTranscribeYoutubeAudio } from './lib/wit';
 import { Languages, Mic } from 'lucide-react';
 
 function App() {
@@ -24,11 +25,21 @@ function App() {
     setVideoId(id);
     setIsLoading(true);
     
-    // Simulating transcription API call
-    setTimeout(() => {
-      setTranscription('هذا مجرد مثال للنص المستخرج من الفيديو. في التطبيق الفعلي، سيتم استبدال هذا النص بالنص الحقيقي المستخرج من الفيديو.');
+    try {
+      const { text, error } = await downloadAndTranscribeYoutubeAudio(id);
+      
+      if (error) {
+        setError(error);
+        setTranscription(null);
+      } else if (text) {
+        setTranscription(text);
+      }
+    } catch (err) {
+      setError('حدث خطأ أثناء معالجة الفيديو');
+      setTranscription(null);
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   return (
